@@ -11,8 +11,8 @@ import threading
 from typing import Dict, List, Any, Optional, Tuple
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from hierarchical_graph import HierarchicalGraphBuilder
-from hierarchical_extraction import ExcelDataRepresentation
+from ..graph.hierarchical_graph import HierarchicalGraphBuilder
+from ..graph.hierarchical_extraction import ExcelDataRepresentation
 
 @dataclass
 class CostLimits:

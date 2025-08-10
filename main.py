@@ -9,8 +9,8 @@ Main deliverable with two core functions:
 import os
 import json
 from typing import Dict, Any, Optional
-from excel_processor import ExcelProcessor
-from combined_query_engine import CombinedQueryEngine
+from src.core.excel_processor import ExcelProcessor
+from src.core.combined_query_engine import CombinedQueryEngine
 
 def get_api_key() -> Optional[str]:
     """
@@ -110,7 +110,7 @@ def excel_query(query: str, data_representation: Dict[str, Any]) -> str:
         api_key = get_api_key()
         
         # Initialize the combined query engine
-        engine = CombinedQueryEngine(api_key=api_key)
+        engine = CombinedQueryEngine(llm_api_key=api_key)
         
         print(f"Processing query: {query}")
         
@@ -175,7 +175,7 @@ def save_representation(representation: Dict[str, Any]) -> None:
     """Save the data representation to a JSON file."""
     try:
         with open("data_representation.json", "w") as f:
-            json.dump(representation, f, indent=2)
+            json.dump(representation, f, indent=2, default=str)
     except Exception as e:
         print(f"Error saving representation: {e}")
 
@@ -184,7 +184,7 @@ def load_representation() -> Optional[Dict[str, Any]]:
     try:
         with open("data_representation.json", "r") as f:
             representation = json.load(f)
-            print(f"Loaded data representation from: {file_path}")
+            print(f"Loaded data representation from data_representation.json")
             return representation
     except Exception as e:
         print(f"Error loading representation: {e}")
@@ -200,7 +200,7 @@ if __name__ == "__main__":
     print("=" * 50)
     
     # Process the Excel file directly
-    excel_file = "Consolidated Plan 2023-2024.xlsm"
+    excel_file = "data/Consolidated Plan 2023-2024.xlsm"
     if os.path.exists(excel_file):
         print(f"\nProcessing Excel file: {excel_file}")
         representation = process_file(excel_file)

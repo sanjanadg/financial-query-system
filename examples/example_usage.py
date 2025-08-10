@@ -4,6 +4,10 @@
 # - process_file(file_path) -> data_representation
 # - excel_query(query, data_representation) -> answer
 
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from main import process_file, excel_query
 
 def read_queries_from_file(filename: str) -> list:
@@ -33,7 +37,7 @@ def main():
     print("=" * 50)
     
     # Process the Excel file (will use cached data if available)
-    excel_file = "Consolidated Plan 2023-2024.xlsm"
+    excel_file = "data/Consolidated Plan 2023-2024.xlsm"
     representation = process_file(excel_file)
     
     if not representation:
@@ -41,7 +45,7 @@ def main():
         return
     
     # Read all queries from the file
-    queries = read_queries_from_file("excel_queries.txt")
+    queries = read_queries_from_file("data/excel_queries.txt")
     
     if not queries:
         print("No queries found in excel_queries.txt")

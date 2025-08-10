@@ -8,7 +8,7 @@ with context at each level for effective querying.
 import networkx as nx
 from typing import Dict, List, Any, Optional, Tuple
 from sentence_transformers import SentenceTransformer
-from knowledge_graph import KnowledgeGraphBuilder
+from .knowledge_graph import KnowledgeGraphBuilder
 import faiss
 import numpy as np
 import re

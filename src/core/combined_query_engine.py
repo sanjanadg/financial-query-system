@@ -8,8 +8,8 @@ Tries traditional queries first, then falls back to LLM if needed.
 import json
 import os
 from typing import Dict, Any, Optional
-from query import QueryEngine
-from llm_integration import LLMQueryEnhancer, LLMResponseGenerator, create_llm_config
+from .query import QueryEngine
+from ..llm.llm_integration import LLMQueryEnhancer, LLMResponseGenerator, create_llm_config
 
 class CombinedQueryEngine:
     """
@@ -146,9 +146,12 @@ class CombinedQueryEngine:
             if not enhanced_understanding:
                 return None
             
-            # Generate response using LLM
+            # Create summarized data for LLM to avoid context length issues
+            summarized_data = self._create_summarized_data(traditional_result)
+            
+            # Generate response using LLM with summarized data
             llm_response = self.llm_response_generator.generate_response(
-                query, traditional_result, enhanced_understanding
+                query, summarized_data, enhanced_understanding
             )
             
             # Create comprehensive result
@@ -222,6 +225,73 @@ class CombinedQueryEngine:
             context['sheets'] = list(representation['sheets'].keys())
         
         return context
+    
+    def _create_summarized_data(self, traditional_result: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Create a summarized version of the traditional result data for LLM processing.
+        This prevents context length issues by limiting the amount of data sent to the LLM.
+        
+        Args:
+            traditional_result: The full result from traditional query engine
+            
+        Returns:
+            Summarized data suitable for LLM processing
+        """
+        if not traditional_result or 'data_points' not in traditional_result:
+            return traditional_result
+        
+        data_points = traditional_result['data_points']
+        if not data_points:
+            return traditional_result
+        
+        # Create summary with key statistics
+        summary = {
+            'query': traditional_result.get('query', ''),
+            'answer': traditional_result.get('answer', ''),
+            'confidence': traditional_result.get('confidence', 0.0),
+            'source_sheets': traditional_result.get('source_sheets', []),
+            'total_data_points': len(data_points),
+            'summary_stats': {}
+        }
+        
+        # If we have too many data points, create a statistical summary
+        if len(data_points) > 100:
+            # Group data by key metrics if possible
+            metric_groups = {}
+            for point in data_points:
+                if isinstance(point, dict):
+                    metric = point.get('metric', 'Unknown')
+                    if metric not in metric_groups:
+                        metric_groups[metric] = []
+                    metric_groups[metric].append(point)
+            
+            # Create summary for each metric group
+            for metric, points in metric_groups.items():
+                if points:
+                    values = []
+                    time_periods = []
+                    for point in points:
+                        if 'value' in point and isinstance(point['value'], (int, float)):
+                            values.append(point['value'])
+                        if 'time_period' in point:
+                            time_periods.append(point['time_period'])
+                    
+                    if values:
+                        summary['summary_stats'][metric] = {
+                            'count': len(values),
+                            'min': min(values),
+                            'max': max(values),
+                            'avg': sum(values) / len(values),
+                            'sample_time_periods': time_periods[:5]  # First 5 time periods
+                        }
+            
+            # Add sample data points (first 10)
+            summary['sample_data_points'] = data_points[:10]
+        else:
+            # If not too many data points, include them all
+            summary['data_points'] = data_points
+        
+        return summary
     
     def get_query_method_summary(self) -> Dict[str, Any]:
         """

@@ -5,8 +5,8 @@ from typing import Dict, List, Any, Tuple, Optional
 import re
 from datetime import datetime
 import warnings
-from hierarchical_graph import HierarchicalGraphBuilder
-from knowledge_graph import KnowledgeGraphBuilder
+from .hierarchical_graph import HierarchicalGraphBuilder
+from .knowledge_graph import KnowledgeGraphBuilder
 warnings.filterwarnings('ignore')
 
 """
