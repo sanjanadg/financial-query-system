@@ -6,4 +6,4 @@ and enhanced with Large Language Model capabilities.
 """
 
 __version__ = "1.0.0"
-__author__ = "Sapien Task Team"
+__author__ = "Sanjana D."
