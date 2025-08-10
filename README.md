@@ -1,4 +1,4 @@
-# Consolidated Excel Query Engine
+# Excel Query Engine
 
 An Excel data processing and querying engine that combines traditional data extraction with AI-powered analysis.
 
@@ -169,6 +169,12 @@ source .env
 ```
 
 ### Performance
-- Large Excel files may take time to process initially
+- Only the flat representation is used
+- Keeps track of OpenAI API costs
 - Data representation is cached in JSON for faster subsequent queries
 - AI features require internet connection and valid API key
+
+### Next Steps
+- Hybrid approach: Depending on the query type, choosing a flat representation v. an optimized hierarchical knowledge graph
+- Consider: visual segmentation, sparsity
+- The integration of agentic AI: Create inbuilt functionalities (like for calculations) that can be used when the LLM recognizes what task it needs to perform
