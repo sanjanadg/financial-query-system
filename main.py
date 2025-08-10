@@ -3,7 +3,8 @@ import openpyxl
 import sys
 import os
 sys.path.append('..')
-from excel_processor1 import ExcelProcessor as ep
+from excel_processor import ExcelProcessor
+from query import QueryEngine
 
 
 def process_file(file_path: str) -> any:
@@ -19,7 +20,7 @@ def process_file(file_path: str) -> any:
     print("-" * 30)
     
     # Create an instance of the Excel processor
-    processor = ep()
+    processor = ExcelProcessor()
     
     # Check if we already have a processed representation
     if os.path.exists(representation_file):
@@ -27,16 +28,16 @@ def process_file(file_path: str) -> any:
         use_existing = input("Use existing representation? (y/n): ").lower().strip()
         
         if use_existing == 'y':
-            representation = ep.load_representation(representation_file)
+            representation = ExcelProcessor.load_representation(representation_file)
             if representation is None:
                 print("Failed to load existing representation. Processing file again...")
                 representation = processor.process_file(file_path)
         else:
             representation = processor.process_file(file_path)
-            ep.save_representation(representation, representation_file)
+            ExcelProcessor.save_representation(representation, representation_file)
     else:
         representation = processor.process_file(file_path)
-        ep.save_representation(representation, representation_file)
+        ExcelProcessor.save_representation(representation, representation_file)
 
     return representation
     
@@ -47,7 +48,7 @@ def excel_query(query: str, file_rep: any) -> str:
     file_rep: The processed filed represented (from process_file)
     """
     # For now, use the processor's query_file method
-    processor = ep()
+    processor = ExcelProcessor()
     return processor.query_file(file_rep, query)
 
 def main():
@@ -55,7 +56,7 @@ def main():
     Main function to run the program
     """
     # Process the Excel file
-    file_rep = process_file("/Users/sanjanad/sapien-take-home-final/Consolidated Plan 2023-2024.xlsm")
+    file_rep = process_file("Consolidated Plan 2023-2024.xlsm")
     
     # Check if knowledge graph was built
     if hasattr(file_rep, 'knowledge_graph') and file_rep.knowledge_graph is not None:
@@ -83,8 +84,8 @@ def main():
     
     for query in test_queries:
         print(f"\n--- Query: {query} ---")
-        result = excel_query(query, file_rep)
-        print(f"Result: {result}")
+        result = QueryEngine().query_file(file_rep, query)
+        QueryEngine.print_query_results(result)
     
     # Test knowledge graph similarity search
     if hasattr(file_rep, 'knowledge_graph') and file_rep.knowledge_graph is not None:
