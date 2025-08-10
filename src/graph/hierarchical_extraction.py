@@ -11,11 +11,6 @@ warnings.filterwarnings('ignore')
 
 """
 ENHANCED DATA REPRESENTATION STRUCTURE:
-1. **Integrates directly into data sources** (APIs, files, databases)
-2. **Localizes each atomic unit** (cells, rows, tables, etc.)
-3. **Computes contextual information and hierarchy** around and within each unit
-4. **Constructs embeddings** using both content and context
-5. **Inserts atomic units into a graph representation** for querying
 """
 
 class AtomicUnit:
