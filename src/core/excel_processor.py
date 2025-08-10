@@ -105,35 +105,6 @@ class ExcelProcessor:
                     converted_data.append(row)
             data = converted_data
         
-        # For Branch P&L specifically, we know it's a financial statement
-        # Check if this looks like Branch P&L by examining the data
-        if len(data) > 0:
-            # Look for any row that contains "final documentation" or similar Branch P&L indicators
-            branch_indicators = ['final documentation', 'branch', 'brnch']
-            has_branch_indicators = False
-            for row in data[:20]:  # Check first 20 rows
-                if row and len(row) > 0:
-                    first_col_val = str(row[0]).lower() if row[0] else ''
-                    if any(indicator in first_col_val for indicator in branch_indicators):
-                        has_branch_indicators = True
-                        break
-            
-            if has_branch_indicators:
-                # Check if we have time periods in subsequent columns
-                has_time_periods = False
-                if len(data) > 0 and len(data[0]) > 1:
-                    for col_idx in range(1, min(6, len(data[0]))):
-                        if any(self._is_time_period(str(data[0][col_idx])) for row in data[:3]):
-                            has_time_periods = True
-                            break
-                
-                if has_time_periods:
-                    return {
-                        'type': 'financial_statement',
-                        'special_case': 'branch_pl',
-                        'has_time_periods': True
-                    }
-        
         # Standard financial statement detection
         if len(data) < 3:
             return None
@@ -153,7 +124,7 @@ class ExcelProcessor:
         # Check for financial terms in first column
         financial_terms = ['income', 'revenue', 'gross profit', 'operating', 'ebitda', 
                           'cost', 'expense', 'profit', 'loss', 'cash', 'debt', 'equity',
-                          'project', 'payment', 'milestone', 'documentation']
+                          'project', 'payment', 'milestone', 'documentation', 'advertising']
         
         has_financial_terms = any(any(term in val for term in financial_terms) 
                                  for val in first_col_values)
@@ -212,10 +183,6 @@ class ExcelProcessor:
                     converted_data.append(row)
             data = converted_data
         
-        # Handle special case for Branch P&L
-        if structure.get('special_case') == 'branch_pl':
-            return self._extract_branch_pl_data(data)
-        
         # Standard financial data extraction
         if len(data) < 2:
             return financial_data
@@ -259,88 +226,6 @@ class ExcelProcessor:
                     'values': values,
                     'row_index': row_idx
                 }
-        
-        return financial_data
-    
-    def _extract_branch_pl_data(self, data):
-        """Extract financial data from Branch P&L with its special structure."""
-        financial_data = {}
-        
-        # Branch P&L has a different structure - look for rows with numeric values
-        for row_idx, row in enumerate(data):
-            if not row or len(row) == 0:
-                continue
-            
-            # Skip header rows (first 2 rows are typically headers)
-            if row_idx < 2:
-                continue
-            
-            # Look for rows that have numeric values in time period columns
-            numeric_values = []
-            time_periods = []
-            
-            for col_idx, value in enumerate(row):
-                if col_idx == 0:  # Skip first column (labels)
-                    continue
-                
-                if value is not None and str(value).strip():
-                    try:
-                        # Try to convert to numeric
-                        if isinstance(value, str):
-                            clean_value = value.replace('$', '').replace(',', '').replace('%', '')
-                            if clean_value.replace('.', '').replace('-', '').isdigit():
-                                numeric_value = float(clean_value)
-                                numeric_values.append(numeric_value)
-                                # Get the time period from the header
-                                if len(data) > 0 and col_idx < len(data[0]):
-                                    time_period = str(data[0][col_idx]).strip()
-                                    time_periods.append(time_period)
-                        elif isinstance(value, (int, float)):
-                            numeric_values.append(float(value))
-                            if len(data) > 0 and col_idx < len(data[0]):
-                                time_period = str(data[0][col_idx]).strip()
-                                time_periods.append(time_period)
-                    except:
-                        continue
-            
-            # If we found numeric values, create a metric
-            if numeric_values and time_periods:
-                # Create a descriptive metric name based on the row content
-                metric_name = f"Branch Financial Metric Row {row_idx + 1}"
-                
-                # Try to get a meaningful name from the first column
-                if row[0]:
-                    first_col_val = str(row[0]).strip()
-                    if first_col_val:
-                        # Clean up the metric name
-                        if first_col_val.lower() in ['final documentation', 'branch', 'brnch']:
-                            # Skip these generic labels
-                            continue
-                        
-                        # Use the first column value as the metric name
-                        metric_name = f"Branch {first_col_val}"
-                        
-                        # Add context if it's a specific type of data
-                        if any(term in first_col_val.lower() for term in ['forecast', 'budget', 'plan']):
-                            metric_name = f"Branch {first_col_val} Forecast"
-                        elif any(term in first_col_val.lower() for term in ['revenue', 'income', 'sales']):
-                            metric_name = f"Branch {first_col_val}"
-                        elif any(term in first_col_val.lower() for term in ['cost', 'expense', 'expenditure']):
-                            metric_name = f"Branch {first_col_val}"
-                        elif any(term in first_col_val.lower() for term in ['profit', 'margin', 'ebitda']):
-                            metric_name = f"Branch {first_col_val}"
-                
-                metric_data = {
-                    'metric': metric_name,
-                    'values': {},
-                    'row_index': row_idx
-                }
-                
-                # Add the values
-                for time_period, value in zip(time_periods, numeric_values):
-                    metric_data['values'][time_period] = value
-                
-                financial_data[metric_name] = metric_data
         
         return financial_data
     
