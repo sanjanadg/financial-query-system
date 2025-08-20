@@ -73,3 +73,5 @@ htmlcov/
 *.backup
 
 SECURITY.md
+
+data/
